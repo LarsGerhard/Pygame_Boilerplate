@@ -73,15 +73,15 @@ def save_display_config(full_in, screen_width_in, screen_height_in, display_numb
 
 
 # Creates and saves default display settings
-def create_default_display_config():
+def create_default_display_config(fullscreen_in = 0, display_number_in = 0, framerate_number_in = 60, frame_counter_in = False):
     # Attempts to read system for defaults
     resolution_out = pg.display.get_desktop_sizes()[0]
-    fullscreen_out = 0
+    fullscreen_out = fullscreen_in
     screen_width_out = resolution_out[0]
     screen_height_out = resolution_out[1]
-    display_number_out = 0
-    framerate_number_out = 120
-    frame_counter_out = False
+    display_number_out = display_number_in
+    framerate_number_out = framerate_number_in
+    frame_counter_out = frame_counter_in
 
     # Checks that system defaults are valid
     try:
@@ -96,14 +96,14 @@ def create_default_display_config():
 
     # Error for if resolution is invalid
     except TypeError("Given invalid resolution"):
-        print("Error 4: Could not parse display information, defaulting to 720p")
+        print("Error 5: Could not parse display information, defaulting to 720p")
         screen_width_out = 1280
         screen_height_out = 720
 
     # Error for if framerate is invalid
     except TypeError("Given invalid framerate"):
-        print("Error 4: Could not parse framerate, defaulting to 120fps")
-        framerate_number_out = 120
+        print("Error 4: Could not parse framerate, defaulting to 60fps")
+        framerate_number_out = 60
 
     # Saves display information for the future
     save_display_config(fullscreen_out, screen_width_out, screen_height_out, display_number_out, framerate_number_out,
@@ -151,18 +151,28 @@ try:
         loaded_config = json.load(openfile)
 
     # Assigns configuration variables to python variables for later use
-    fullscreen = loaded_config["Fullscreen (0 for full, 1 for windowed, 2 for borderless windowed)"]
-    screen_width = loaded_config["Screen Width (in px)"]
-    screen_height = loaded_config["Screen Height (in px)"]
-    display_number = loaded_config["Display Number (0 for primary monitor)"]
-    framerate = loaded_config["Framerate (in fps)"]
-    frame_counter = loaded_config["Frame Counter On (true or false)"]
+    loaded_fullscreen = loaded_config["Fullscreen (0 for full, 1 for windowed, 2 for borderless windowed)"]
+    loaded_screen_width = loaded_config["Screen Width (in px)"]
+    loaded_screen_height = loaded_config["Screen Height (in px)"]
+    loaded_display_number = loaded_config["Display Number (0 for primary monitor)"]
+    loaded_framerate = loaded_config["Framerate (in fps)"]
+    loaded_frame_counter = loaded_config["Frame Counter On (true or false)"]
 
     # Raises a TypeError if the read configuration variables are invalid data types
-    if not (type(fullscreen) or type(screen_width) or type(screen_height) or type(display_number) or
-            type(framerate) is int) or (screen_height < 1 or screen_width < 0 or framerate < 1 or
-                                        type(frame_counter) is not bool):
+    if not (type(loaded_fullscreen) or type(loaded_screen_width) or type(loaded_screen_height) or type(loaded_display_number) or
+            type(loaded_framerate) is int) or (loaded_screen_height < 1 or loaded_screen_width < 0 or loaded_framerate < 1 or
+                                        type(loaded_frame_counter) is not bool):
         raise TypeError
+
+    # Changes resolution ONLY if resolution is too big
+
+    fullscreen, screen_width, screen_height, display_number, framerate, frame_counter = create_default_display_config(loaded_fullscreen, loaded_display_number,loaded_framerate ,loaded_frame_counter)
+    if loaded_screen_height > screen_height or loaded_screen_width > screen_width:
+        print("Error 6: Loaded resolution too big! Changing resolution to something that your mighty monitor can handle")
+
+    else:
+        screen_width = loaded_screen_width
+        screen_height = loaded_screen_height
 
 # If the config file doesn't exist, recreates the file and sets values to default
 except OSError:
