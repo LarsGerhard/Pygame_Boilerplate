@@ -387,13 +387,11 @@ while state != 0:
     # Sets Framerate
     frame_clock.tick(framerate)
 
-    # TODO: Figure out decoupling framerate with game speed
-    # Sets program speed (1 second)
-    dt = move_clock.tick()
+    # Sets program speed
 
-    print(dt)
+    dt = move_clock.tick() * (1.012)
 
-    # Unit of velocity (travels the height of the screen in one second)
+    # Unit of velocity (travels the height of the screen in a bit more than one second)
     VU = (scale / 10) * dt
 
     # Gets mouse coordinates
@@ -424,7 +422,7 @@ while state != 0:
 
             # Resets position if the box hits the screen edge
             if test_square.y >= height:
-                test_square.y = - height / 10
+                test_square.y = 0
 
         # Button that if clicked switches the screen to the settings
         if configure_button.single_render_click(True, True):

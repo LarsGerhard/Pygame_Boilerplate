@@ -3,6 +3,6 @@
   "Screen Width (in px)": 1280,
   "Screen Height (in px)": 720,
   "Display Number (0 for primary monitor)": 0,
-  "Framerate (in fps)": 90.5,
+  "Framerate (in fps)": 120,
   "Frame Counter On (true or false)": true
 }
