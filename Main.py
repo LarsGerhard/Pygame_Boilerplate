@@ -73,7 +73,7 @@ def save_display_config(full_in, screen_width_in, screen_height_in, display_numb
 
 
 # Creates and saves default display settings
-def create_default_display_config(fullscreen_in = 0, display_number_in = 0, framerate_number_in = 60, frame_counter_in = False):
+def create_default_display_config(fullscreen_in=0, display_number_in=0, framerate_number_in=60, frame_counter_in=False):
     # Attempts to read system for defaults
     resolution_out = pg.display.get_desktop_sizes()[0]
     fullscreen_out = fullscreen_in
@@ -159,16 +159,20 @@ try:
     loaded_frame_counter = loaded_config["Frame Counter On (true or false)"]
 
     # Raises a TypeError if the read configuration variables are invalid data types
-    if not (type(loaded_fullscreen) or type(loaded_screen_width) or type(loaded_screen_height) or type(loaded_display_number) or
-            type(loaded_framerate) is int) or (loaded_screen_height < 1 or loaded_screen_width < 0 or loaded_framerate < 1 or
-                                        type(loaded_frame_counter) is not bool):
+    if not (type(loaded_fullscreen) or type(loaded_screen_width) or type(loaded_screen_height) or type(
+            loaded_display_number) or
+            type(loaded_framerate) is int) or (
+            loaded_screen_height < 1 or loaded_screen_width < 0 or loaded_framerate < 1 or
+            type(loaded_frame_counter) is not bool):
         raise TypeError
 
     # Changes resolution ONLY if resolution is too big
 
-    fullscreen, screen_width, screen_height, display_number, framerate, frame_counter = create_default_display_config(loaded_fullscreen, loaded_display_number,loaded_framerate ,loaded_frame_counter)
+    fullscreen, screen_width, screen_height, display_number, framerate, frame_counter = create_default_display_config(
+        loaded_fullscreen, loaded_display_number, loaded_framerate, loaded_frame_counter)
     if loaded_screen_height > screen_height or loaded_screen_width > screen_width:
-        print("Error 6: Loaded resolution too big! Changing resolution to something that your mighty monitor can handle")
+        print(
+            "Error 6: Loaded resolution too big! Changing resolution to something that your mighty monitor can handle")
 
     else:
         screen_width = loaded_screen_width
@@ -399,7 +403,7 @@ while state != 0:
 
     # Sets program speed
 
-    dt = move_clock.tick() * (1.012)
+    dt = move_clock.tick() * 1.012
 
     # Unit of velocity (travels the height of the screen in a bit more than one second)
     VU = (scale / 10) * dt
