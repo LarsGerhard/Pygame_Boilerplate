@@ -13,7 +13,9 @@ pg.init()
 
 _circle_cache = {}
 
-
+def rescale(object, vhin, vwin):
+    object.x = (object.x / vw) * vwin
+    object.y = (object.y / vh) * vhin
 def _circlepoints(r):
     r = int(round(r))
     if r in _circle_cache:
@@ -114,21 +116,23 @@ def create_default_display_config(fullscreen_in=0, display_number_in=0, framerat
 
 
 # Loads fonts based on passed height
-def font_size_change(window_size):
+def font_size_change(window_height, window_width):
     # Set scale used (height of the window / 100)
-    object_scale = window_size / 100
+    vhout = window_height / 100
+    vwout = window_width / 100
+    vminout = min(vhout, vwout)
 
     # Load fonts, scaled with window size
-    scaled_small_font = pg.font.SysFont(pg.font.get_default_font(), int(5 * object_scale))
+    scaled_small_font = pg.font.SysFont(pg.font.get_default_font(), int(5 * vminout))
 
-    scaled_medium_font = pg.font.SysFont(pg.font.get_default_font(), int(8 * object_scale))
+    scaled_medium_font = pg.font.SysFont(pg.font.get_default_font(), int(8 * vminout))
 
-    scaled_large_font = pg.font.SysFont(pg.font.get_default_font(), int(12 * object_scale))
+    scaled_large_font = pg.font.SysFont(pg.font.get_default_font(), int(12 * vminout))
 
-    scaled_huge_font = pg.font.SysFont(pg.font.get_default_font(), int(25 * object_scale))
+    scaled_huge_font = pg.font.SysFont(pg.font.get_default_font(), int(25 * vminout))
 
     # Output fonts
-    return scaled_small_font, scaled_medium_font, scaled_large_font, scaled_huge_font, object_scale
+    return scaled_small_font, scaled_medium_font, scaled_large_font, scaled_huge_font, vhout, vwout, vminout
 
 
 def frame_counter_function():
@@ -193,13 +197,13 @@ except JSONDecodeError:
     print("Error 3: Unreadable configuration file, recreating from scratch")
     fullscreen, screen_width, screen_height, display_number, framerate, frame_counter = create_default_display_config()
 
-# TODO: Create logic for changing window when new display is added
 # Create window
 if fullscreen == 0:
     screen = pg.display.set_mode(size=(screen_width, screen_height), flags=pg.FULLSCREEN,
                                  display=display_number, vsync=1)
+# TODO: Fix so that default saved resolution is different
 elif fullscreen == 1:
-    screen = pg.display.set_mode(size=(screen_width * 0.8, screen_height * 0.8),
+    screen = pg.display.set_mode(size=(screen_width * 0.8, screen_height * 0.8), flags=pg.RESIZABLE,
                                  vsync=1)
 else:
     screen = pg.display.set_mode(size=(screen_width, screen_height), flags=pg.NOFRAME, vsync=1)
@@ -234,7 +238,7 @@ green = pg.Color("#a3be8c")
 purple = pg.Color("#b48ead")
 
 # Loads fonts based on starting height
-small_font, medium_font, large_font, huge_font, scale = font_size_change(height)
+small_font, medium_font, large_font, huge_font, vh, vw, vmin = font_size_change(height, width)
 
 # Sets up movement and framerate titles
 frame_clock = pg.time.Clock()
@@ -243,7 +247,6 @@ move_clock = pg.time.Clock()
 
 
 # Used classes
-# TODO: Create shape button
 
 # Class for more easily printing text directly to the screen
 # Follows (Text input, x position, y position, main colour of the text, font used)
@@ -259,6 +262,11 @@ class ScreenText:
 
     # Function to call for the text to be rendered. x_off and y_off being false result in the x/y coordinates being the
     # centre of the text rather than the top right corner
+    def rescale(self, vhin, vwin, font_in=large_font):
+        self.font = font_in
+        self.x = (self.x / vw) * vwin
+        self.y = (self.y / vh) * vhin
+
     def render(self, x_off=False, y_off=False):
 
         # Loads text and correctable x/y coordinates
@@ -281,7 +289,7 @@ class ScreenText:
 # Follows (Text input, x position, y position, main colour of the text, highlight colour for when text is hovered,
 # click colour for while text is pressed, font used)
 class ClickText(ScreenText):
-    def __init__(self, text, x, y, colour=blue, highlight_colour=green, click_colour=teal, font=large_font):
+    def __init__(self, text, x, y, colour=blue, highlight_colour=white_one, click_colour=green, font=large_font):
 
         # Loads parent class properties and additional properties
         super().__init__(text, x, y)
@@ -365,19 +373,16 @@ class ClickText(ScreenText):
 # Objects on title screen
 
 # Title for main screen
-title = ScreenText("Title!", width / 2, scale, font=huge_font)
-
-# Title for settings screen
-title_settings = ScreenText("Settings", width / 2, scale, font=huge_font)
+title = ScreenText("Title!", 50 * vw, vh, font=huge_font)
 
 # Square used to test motion
-test_square = pg.Rect(0, 0, 10 * scale, 10 * scale)
+test_square = pg.Rect(0, 0, 10 * vh, 10 * vh)
 
 # Spacing distance between text
-text_space_title = 12 * scale
+text_space_title = 12 * vh
 
 # Spacing distance from left side
-text_location_title = 18 * scale
+text_location_title = 18 * vh
 
 # Example begin button (By default moves the test box)
 begin_button = ClickText("Launch", text_location_title, 2 * text_space_title)
@@ -392,6 +397,11 @@ configure_button = ClickText("Configure", text_location_title, 4 * text_space_ti
 quit_button = ClickText("Exit", text_location_title, 5 * text_space_title)
 
 # Objects on config screen
+
+# Title for settings screen
+title_settings = ScreenText("Settings", width / 2, vh, font=huge_font)
+
+# Back button
 back_button = ClickText("Back", text_location_title, 2 * text_space_title)
 
 # Basic program loop
@@ -406,7 +416,7 @@ while state != 0:
     dt = move_clock.tick() * 1.012
 
     # Unit of velocity (travels the height of the screen in a bit more than one second)
-    VU = (scale / 10) * dt
+    VU = (vh / 10) * dt
 
     # Gets mouse coordinates
     mouse = pg.mouse.get_pos()
@@ -416,6 +426,15 @@ while state != 0:
         # Checks if corner close button is pressed
         if event.type == pg.QUIT:
             state = 0
+        # Changes window size if resized
+        if event.type == pg.VIDEORESIZE:
+            screen_width = screen.get_width()
+            screen_height = screen.get_height()
+            width, height = screen_width, screen_height
+            small_font, medium_font, large_font, huge_font, vhnew, vwnew, vminnew = font_size_change(height, width)
+            title.rescale(vhnew, vwnew, huge_font)
+            vh = vhnew
+            vw = vwnew
 
     # Creates blank screen
     screen.fill(grey_one)
@@ -468,6 +487,8 @@ while state != 0:
 
     # Update display
     pg.display.update()
+
+    # Resize if windowed and size changes
 
 # Closes window
 pg.quit()
