@@ -13,9 +13,12 @@ pg.init()
 
 _circle_cache = {}
 
-def rescale(object, vhin, vwin):
-    object.x = (object.x / vw) * vwin
-    object.y = (object.y / vh) * vhin
+
+def rescale(thing, vhin, vwin):
+    thing.x = (thing.x / vw) * vwin
+    thing.y = (thing.y / vh) * vhin
+
+
 def _circlepoints(r):
     r = int(round(r))
     if r in _circle_cache:
@@ -181,6 +184,7 @@ try:
     else:
         screen_width = loaded_screen_width
         screen_height = loaded_screen_height
+        save_display_config(fullscreen, screen_width, screen_height, display_number, framerate, frame_counter)
 
 # If the config file doesn't exist, recreates the file and sets values to default
 except OSError:
@@ -201,10 +205,8 @@ except JSONDecodeError:
 if fullscreen == 0:
     screen = pg.display.set_mode(size=(screen_width, screen_height), flags=pg.FULLSCREEN,
                                  display=display_number, vsync=1)
-# TODO: Fix so that default saved resolution is different
 elif fullscreen == 1:
-    screen = pg.display.set_mode(size=(screen_width * 0.8, screen_height * 0.8), flags=pg.RESIZABLE,
-                                 vsync=1)
+    screen = pg.display.set_mode(size=(screen_width, screen_height), vsync=1)
 else:
     screen = pg.display.set_mode(size=(screen_width, screen_height), flags=pg.NOFRAME, vsync=1)
 
@@ -426,64 +428,57 @@ while state != 0:
         # Checks if corner close button is pressed
         if event.type == pg.QUIT:
             state = 0
-        # Changes window size if resized
-        if event.type == pg.VIDEORESIZE:
-            screen_width = screen.get_width()
-            screen_height = screen.get_height()
-            width, height = screen_width, screen_height
-            small_font, medium_font, large_font, huge_font, vhnew, vwnew, vminnew = font_size_change(height, width)
-            title.rescale(vhnew, vwnew, huge_font)
-            vh = vhnew
-            vw = vwnew
+
 
     # Creates blank screen
     screen.fill(grey_one)
 
     # Title screen, occurs in game loop only if state = 1
-    if state == 1:
+    match state:
+        case 1:
 
-        # Create title
-        title.render(y_off=True)
+            # Create title
+            title.render(y_off=True)
 
-        # Button that if toggled shows a box
-        if not toggle_button.render_toggle(True, True):
-            pg.draw.rect(screen, purple, test_square)
+            # Button that if toggled shows a box
+            if not toggle_button.render_toggle(True, True):
+                pg.draw.rect(screen, purple, test_square)
 
-        # Button that when pressed moves the box
-        if begin_button.render_click(True, True):
-            test_square.y += VU
+            # Button that when pressed moves the box
+            if begin_button.render_click(True, True):
+                test_square.y += VU
 
-            # Resets position if the box hits the screen edge
-            if test_square.y >= height:
-                test_square.y = 0
+                # Resets position if the box hits the screen edge
+                if test_square.y >= height:
+                    test_square.y = 0
 
-        # Button that if clicked switches the screen to the settings
-        if configure_button.single_render_click(True, True):
-            state = 2
+            # Button that if clicked switches the screen to the settings
+            if configure_button.single_render_click(True, True):
+                state = 2
 
-        # Button that if clicked quited the game
-        if quit_button.single_render_click(True, True):
-            state = 0
+            # Button that if clicked quited the game
+            if quit_button.single_render_click(True, True):
+                state = 0
 
-        # Run FPS counter if enabled
-        frame_counter_function()
+            # Run FPS counter if enabled
+            frame_counter_function()
 
-    # Settings menu, occurs only if state = 2
-    elif state == 2:
+        # Settings menu, occurs only if state = 2
+        case 2:
 
-        # Create title
-        title_settings.render(y_off=True)
+            # Create title
+            title_settings.render(y_off=True)
 
-        # Runs frame counter if enabled
-        frame_counter_function()
+            # Runs frame counter if enabled
+            frame_counter_function()
 
-        # TODO: Fill out with settings
-        # TODO: Make settings changes instant
-        # TODO: Account for different aspect ratios when drawing objects (21:9, 16:9, 16:10, 3:2, 4:3)
+            # TODO: Fill out with settings
+            # TODO: Make settings changes instant
+            # TODO: Account for different aspect ratios when drawing objects (21:9, 16:9, 16:10, 3:2, 4:3)
 
-        # Button that returns to main screen if clicked
-        if back_button.single_render_click(True, True):
-            state = 1
+            # Button that returns to main screen if clicked
+            if back_button.single_render_click(True, True):
+                state = 1
 
     # Update display
     pg.display.update()
